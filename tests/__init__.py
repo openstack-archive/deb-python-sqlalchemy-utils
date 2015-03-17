@@ -11,6 +11,17 @@ from sqlalchemy_utils import (
 )
 
 
+try:
+    import __pypy__
+except ImportError:
+    __pypy__ = None
+
+
+if __pypy__:
+    from psycopg2cffi import compat
+    compat.register()
+
+
 @sa.event.listens_for(sa.engine.Engine, 'before_cursor_execute')
 def count_sql_calls(conn, cursor, statement, parameters, context, executemany):
     try:

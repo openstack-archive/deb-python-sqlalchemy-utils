@@ -9,6 +9,11 @@ import os
 import re
 import sys
 
+try:
+    import __pypy__
+except ImportError:
+    __pypy__ = None
+
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PY3 = sys.version_info[0] == 3
@@ -32,7 +37,7 @@ extras_require = {
         'Jinja2>=2.3',
         'docutils>=0.10',
         'flexmock>=0.9.7',
-        'psycopg2>=2.5.1',
+        'psycopg2cffi>=2.6.1' if __pypy__ else 'psycopg2>=2.5.1',
         'pytz>=2014.2',
         'python-dateutil>=2.2',
         'pymysql',
