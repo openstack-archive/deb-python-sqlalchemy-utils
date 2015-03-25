@@ -77,6 +77,7 @@ from .types import (
     PasswordType,
     PhoneNumber,
     PhoneNumberType,
+    ScalarCoercible,
     ScalarListException,
     ScalarListType,
     TimezoneType,
@@ -86,6 +87,7 @@ from .types import (
     WeekDaysType
 )
 from .models import Timestamp
+from .schema import Schema
 
 
 __version__ = '0.29.8'
