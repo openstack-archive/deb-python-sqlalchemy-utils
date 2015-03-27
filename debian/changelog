@@ -1,0 +1,5 @@
+python-sqlalchemy-utils (0.29.8-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #XXXXXX)
+
+ -- Thomas Goirand <zigo@debian.org>  Fri, 27 Mar 2015 16:18:57 +0100

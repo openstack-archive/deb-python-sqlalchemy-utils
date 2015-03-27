@@ -1,0 +1,9 @@
+Document: python-sqlalchemy-utils-doc
+Title: sqlalchemy-utils Documentation
+Author: N/A
+Abstract: Sphinx documentation for sqlalchemy-utils
+Section: Programming/Python
+
+Format: HTML
+Index: /usr/share/doc/python-sqlalchemy-utils-doc/html/index.html
+Files: /usr/share/doc/python-sqlalchemy-utils-doc/html/*
