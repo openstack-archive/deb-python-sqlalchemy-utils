@@ -18,29 +18,28 @@ def select_aggregate(agg_expr, relationships):
         Sequence of relationships to be used for building the aggregate
         query.
     """
-    from_ = relationships[0].mapper.class_.__table__
+    from_ = relationships[0].mapper.class_
     for relationship in relationships[0:-1]:
-        property_ = relationship.property
-        if property_.secondary is not None:
+        if relationship.secondary is not None:
             from_ = from_.join(
-                property_.secondary,
-                property_.secondaryjoin
+                relationship.secondary,
+                relationship.secondaryjoin
             )
 
         from_ = (
             from_
             .join(
-                property_.parent.class_,
-                property_.primaryjoin
+                relationship.parent.class_,
+                relationship.primaryjoin
             )
         )
 
-    prop = relationships[-1].property
-    condition = prop.primaryjoin
-    if prop.secondary is not None:
+    last = relationships[-1]
+    condition = last.primaryjoin
+    if last.secondary is not None:
         from_ = from_.join(
-            prop.secondary,
-            prop.secondaryjoin
+            last.secondary,
+            last.secondaryjoin
         )
 
     query = sa.select(

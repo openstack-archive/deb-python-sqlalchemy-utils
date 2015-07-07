@@ -370,7 +370,7 @@ import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declared_attr
 
 from .functions.orm import get_column_key
-from .relationships import chained_join, select_aggregate
+from .relationships import chained_join, path_to_relationships, select_aggregate
 
 try:
     # SQLAlchemy 0.9
@@ -446,7 +446,10 @@ class AggregatedValue(object):
 
     @property
     def aggregate_query(self):
-        query = select_aggregate(self.expr, self.relationships)
+        query = select_aggregate(
+            self.expr,
+            [r.property for r in self.relationships]
+        )
 
         return query.correlate(self.class_).as_scalar()
 
@@ -515,16 +518,10 @@ class AggregationManager(object):
 
     def update_generator_registry(self):
         for class_, attrs in six.iteritems(aggregated_attrs):
-            for expr, relationship, column in attrs:
-                relationships = []
-                rel_class = class_
-
-                for path_name in relationship.split('.'):
-                    rel = getattr(rel_class, path_name)
-                    relationships.append(rel)
-                    rel_class = rel.mapper.class_
-
-                self.generator_registry[rel_class].append(
+            for expr, path, column in attrs:
+                relationships = path_to_relationships(path, class_)
+                last_cls = relationships[-1].mapper.class_
+                self.generator_registry[last_cls].append(
                     AggregatedValue(
                         class_=class_,
                         attr=column,
