@@ -1,14 +1,18 @@
 import warnings
-import sqlalchemy as sa
 
+import sqlalchemy as sa
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base, synonym_for
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import sessionmaker
 
 from sqlalchemy_utils import (
-    InstrumentedList, coercion_listener, aggregates, i18n
+    aggregates,
+    coercion_listener,
+    i18n,
+    InstrumentedList
 )
+from sqlalchemy_utils.types.pg_composite import remove_composite_listeners
 
 
 @sa.event.listens_for(sa.engine.Engine, 'before_cursor_execute')
@@ -27,7 +31,7 @@ sa.event.listen(sa.orm.mapper, 'mapper_configured', coercion_listener)
 
 def get_locale():
     class Locale():
-        territories = {'fi': 'Finland'}
+        territories = {'FI': 'Finland'}
 
     return Locale()
 
@@ -57,6 +61,7 @@ class TestCase(object):
         self.session.close_all()
         if self.create_tables:
             self.Base.metadata.drop_all(self.connection)
+        remove_composite_listeners()
         self.connection.close()
         self.engine.dispose()
 

@@ -1,11 +1,16 @@
 import sqlalchemy as sa
-from sqlalchemy.sql import expression
-from sqlalchemy.sql.expression import (
-    Executable,
-    ClauseElement,
-    _literal_as_text
-)
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.expression import (
+    _literal_as_text,
+    ClauseElement,
+    ColumnElement,
+    Executable,
+    FunctionElement
+)
+from sqlalchemy.sql.functions import GenericFunction
+
+from sqlalchemy_utils.functions.orm import quote
 
 
 class explain(Executable, ClauseElement):
@@ -64,7 +69,7 @@ def pg_explain(element, compiler, **kw):
     return text
 
 
-class array_get(expression.FunctionElement):
+class array_get(FunctionElement):
     name = 'array_get'
 
 
@@ -85,3 +90,54 @@ def compile_array_get(element, compiler, **kw):
         compiler.process(args[0]),
         sa.text(str(args[1].value + 1))
     )
+
+
+class row_to_json(GenericFunction):
+    name = 'row_to_json'
+    type = postgresql.JSON
+
+
+@compiles(row_to_json, 'postgresql')
+def compile_row_to_json(element, compiler, **kw):
+    return "%s(%s)" % (element.name, compiler.process(element.clauses))
+
+
+class json_array_length(GenericFunction):
+    name = 'json_array_length'
+    type = sa.Integer
+
+
+@compiles(json_array_length, 'postgresql')
+def compile_json_array_length(element, compiler, **kw):
+    return "%s(%s)" % (element.name, compiler.process(element.clauses))
+
+
+class array_agg(GenericFunction):
+    name = 'array_agg'
+    type = postgresql.ARRAY
+
+    def __init__(self, arg, default=None, **kw):
+        self.type = postgresql.ARRAY(arg.type)
+        self.default = default
+        GenericFunction.__init__(self, arg, **kw)
+
+
+@compiles(array_agg, 'postgresql')
+def compile_array_agg(element, compiler, **kw):
+    compiled = "%s(%s)" % (element.name, compiler.process(element.clauses))
+    if element.default is None:
+        return compiled
+    return str(sa.func.coalesce(
+        sa.text(compiled),
+        sa.cast(postgresql.array(element.default), element.type)
+    ).compile(compiler))
+
+
+class Asterisk(ColumnElement):
+    def __init__(self, selectable):
+        self.selectable = selectable
+
+
+@compiles(Asterisk)
+def compile_asterisk(element, compiler, **kw):
+    return '%s.*' % quote(compiler.dialect, element.selectable.name)

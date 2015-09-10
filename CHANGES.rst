@@ -4,6 +4,109 @@ Changelog
 Here you can see the full list of changes between each SQLAlchemy-Utils release.
 
 
+0.30.12 (2015-07-05)
+^^^^^^^^^^^^^^^^^^^^
+
+- Added support for PhoneNumber extensions (#121)
+
+
+0.30.11 (2015-06-18)
+^^^^^^^^^^^^^^^^^^^^
+
+- Fix None type handling of ChoiceType
+- Make locale casting for translation hybrid expressions cast locales on compilation phase. This extra lazy locale casting is needed in some cases where translation hybrid expressions are used before get_locale
+function is available.
+
+
+0.30.10 (2015-06-17)
+^^^^^^^^^^^^^^^^^^^^
+
+- Added better support for dynamic locales in translation_hybrid
+- Make babel dependent primitive types to use Locale('en') for data validation instead of current locale. Using current locale leads to infinite recursion in cases where the loaded data has dependency to the loaded object's locale.
+
+
+0.30.9 (2015-06-09)
+^^^^^^^^^^^^^^^^^^^
+
+- Added get_type utility function
+- Added default parameter for array_agg function
+
+
+0.30.8 (2015-06-05)
+^^^^^^^^^^^^^^^^^^^
+
+- Added Asterisk compiler
+- Added row_to_json GenericFunction
+- Added array_agg GenericFunction
+- Made quote function accept dialect object as the first paremeter
+- Made has_index work with tables without primary keys (#148)
+
+
+0.30.7 (2015-05-28)
+^^^^^^^^^^^^^^^^^^^
+
+- Fixed CompositeType null handling
+
+
+0.30.6 (2015-05-28)
+^^^^^^^^^^^^^^^^^^^
+
+- Made psycopg2 requirement optional (#145, #146)
+- Made CompositeArray work with tuples given as bind parameters
+
+
+0.30.5 (2015-05-27)
+^^^^^^^^^^^^^^^^^^^
+
+- Fixed CompositeType bind parameter processing when one of the fields is of TypeDecorator type and
+CompositeType is used inside ARRAY type.
+
+
+0.30.4 (2015-05-27)
+^^^^^^^^^^^^^^^^^^^
+
+- Fixed CompositeType bind parameter processing when one of the fields is of TypeDecorator type.
+
+
+0.30.3 (2015-05-27)
+^^^^^^^^^^^^^^^^^^^
+
+- Added length property to range types
+- Added CompositeType for PostgreSQL
+
+
+0.30.2 (2015-05-21)
+^^^^^^^^^^^^^^^^^^^
+
+- Fixed ``assert_max_length``, ``assert_non_nullable``, ``assert_min_value`` and ``assert_max_value`` not properly raising an ``AssertionError`` when the assertion failed.
+
+
+0.30.1 (2015-05-06)
+^^^^^^^^^^^^^^^^^^^
+
+- Drop undocumented batch fetch feature. Let's wait until the inner workings of SQLAlchemy loading API is well-documented.
+- Fixed GenericRelationshipProperty comparator to work with SA 1.0.x (#139)
+- Make all foreign key helpers SA 1.0 compliant
+- Make translation_hybrid expression work the same way as SQLAlchemy-i18n translation expressions
+- Update SQLAlchemy dependency to 1.0
+
+
+0.30.0 (2015-04-15)
+^^^^^^^^^^^^^^^^^^^
+
+- Added __hash__ method to Country class
+- Made Country validate itself during object initialization
+- Made Country string coercible
+- Removed deprecated function generates
+- Fixed observes function to work with simple column properties
+
+
+0.29.9 (2015-04-07)
+^^^^^^^^^^^^^^^^^^^
+
+- Added CurrencyType (#19) and Currency class
+
+
 0.29.8 (2015-03-03)
 ^^^^^^^^^^^^^^^^^^^
 

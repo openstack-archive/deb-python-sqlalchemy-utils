@@ -5,16 +5,16 @@ import six
 import sqlalchemy as sa
 from sqlalchemy.exc import NoInspectionAvailable
 from sqlalchemy.orm import object_session
-from sqlalchemy.schema import MetaData, Table, ForeignKeyConstraint
+from sqlalchemy.schema import ForeignKeyConstraint, MetaData, Table
 
-from .orm import get_column_key, get_mapper, get_tables
 from ..query_chain import QueryChain
+from .orm import get_column_key, get_mapper, get_tables
 
 
 def get_foreign_key_values(fk, obj):
     return dict(
         (
-            fk.constraint.columns[index].key,
+            fk.constraint.columns.values()[index].key,
             getattr(obj, element.column.key)
         )
         for
@@ -357,9 +357,9 @@ def is_indexed_foreign_key(constraint):
     :param constraint: ForeignKeyConstraint object to check the indexes
     """
     return any(
-        set(column.name for column in index.columns)
+        set(constraint.columns.keys())
         ==
-        set(constraint.columns)
+        set(column.name for column in index.columns)
         for index
         in constraint.table.indexes
     )

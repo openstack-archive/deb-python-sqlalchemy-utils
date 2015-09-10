@@ -1,10 +1,13 @@
-import six
 import weakref
-from sqlalchemy_utils.exceptions import ImproperlyConfigured
+
+import six
 from sqlalchemy import types
-from sqlalchemy.dialects import postgresql, oracle
-from .scalar_coercible import ScalarCoercible
+from sqlalchemy.dialects import oracle, postgresql
 from sqlalchemy.ext.mutable import Mutable
+
+from sqlalchemy_utils.exceptions import ImproperlyConfigured
+
+from .scalar_coercible import ScalarCoercible
 
 passlib = None
 try:
@@ -204,6 +207,10 @@ class PasswordType(types.TypeDecorator, ScalarCoercible):
                 value.secret = None
 
         return value
+
+    @property
+    def python_type(self):
+        return self.impl.type.python_type
 
 
 Password.associate_with(PasswordType)

@@ -1,11 +1,7 @@
-from pytest import mark
-import six
 import sqlalchemy as sa
+
 from sqlalchemy_utils.types import timezone
 from tests import TestCase
-
-import dateutil
-import pytz
 
 
 class TestTimezoneType(TestCase):

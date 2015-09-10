@@ -2,20 +2,23 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+
 from functools import partial
 from inspect import isclass
-from itertools import chain
 from operator import attrgetter
+
 import six
 import sqlalchemy as sa
+from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import mapperlib
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.exc import UnmappedInstanceError
-from sqlalchemy.orm.properties import ColumnProperty
+from sqlalchemy.orm.properties import ColumnProperty, RelationshipProperty
 from sqlalchemy.orm.query import _ColumnEntity
 from sqlalchemy.orm.session import object_session
 from sqlalchemy.orm.util import AliasedInsp
+
 from sqlalchemy_utils.utils import is_sequence
 
 
@@ -70,10 +73,10 @@ def get_class_by_table(base, table, data=None):
     :param data: Data row to determine the class in polymorphic scenarios
     :return: Declarative class or None.
     """
-    found_classes = set()
-    for c in base._decl_class_registry.values():
-        if hasattr(c, '__table__') and c.__table__ is table:
-            found_classes.add(c)
+    found_classes = set(
+        c for c in base._decl_class_registry.values()
+        if hasattr(c, '__table__') and c.__table__ is table
+    )
     if len(found_classes) > 1:
         if not data:
             raise ValueError(
@@ -92,12 +95,62 @@ def get_class_by_table(base, table, data=None):
                         return cls
             raise ValueError(
                 "Multiple declarative classes found for table '{0}'. Given "
-                "data row matches does not match any polymorphic identity of "
-                "the found classes."
+                "data row does not match any polymorphic identity of the "
+                "found classes.".format(
+                    table.name
+                )
             )
     elif found_classes:
         return found_classes.pop()
     return None
+
+
+def get_type(expr):
+    """
+    Return the associated type with given Column, InstrumentedAttribute,
+    ColumnProperty, RelationshipProperty or other similar SQLAlchemy construct.
+
+    For constructs wrapping columns this is the column type. For relationships
+    this function returns the relationship mapper class.
+
+    :param expr:
+        SQLAlchemy Column, InstrumentedAttribute, ColumnProperty or other
+        similar SA construct.
+
+    ::
+
+        class User(Base):
+            __tablename__ = 'user'
+            id = sa.Column(sa.Integer, primary_key=True)
+            name = sa.Column(sa.String)
+
+
+        class Article(Base):
+            __tablename__ = 'article'
+            id = sa.Column(sa.Integer, primary_key=True)
+            author_id = sa.Column(sa.Integer, sa.ForeignKey(User.id))
+            author = sa.orm.relationship(User)
+
+
+        get_type(User.__table__.c.name)  # sa.String()
+        get_type(User.name)  # sa.String()
+        get_type(User.name.property)  # sa.String()
+
+        get_type(Article.author)  # User
+
+
+    .. versionadded: 0.30.9
+    """
+    if hasattr(expr, 'type'):
+        return expr.type
+    elif isinstance(expr, InstrumentedAttribute):
+        expr = expr.property
+
+    if isinstance(expr, ColumnProperty):
+        return expr.columns[0].type
+    elif isinstance(expr, RelationshipProperty):
+        return expr.mapper.class_
+    raise TypeError("Couldn't inspect type.")
 
 
 def get_column_key(model, column):
@@ -385,71 +438,6 @@ def getattrs(obj, attrs):
     return map(partial(getattr, obj), attrs)
 
 
-def local_values(prop, entity):
-    return tuple(getattrs(entity, local_column_names(prop)))
-
-
-def list_local_values(prop, entities):
-    return map(partial(local_values, prop), entities)
-
-
-def remote_values(prop, entity):
-    return tuple(getattrs(entity, remote_column_names(prop)))
-
-
-def local_remote_expr(prop, entity):
-    return sa.and_(
-        *[
-            getattr(remote(prop), r.name)
-            ==
-            getattr(entity, l.name)
-            for l, r in prop.local_remote_pairs
-            if r in remote_column_names(prop)
-        ]
-    )
-
-
-def list_local_remote_exprs(prop, entities):
-    return map(partial(local_remote_expr, prop), entities)
-
-
-def remote(prop):
-    try:
-        return prop.secondary.c
-    except AttributeError:
-        return prop.mapper.class_
-
-
-def local_column_names(prop):
-    if not hasattr(prop, 'secondary'):
-        yield prop._discriminator_col.key
-        for id_col in prop._id_cols:
-            yield id_col.key
-    elif prop.secondary is None:
-        for local, _ in prop.local_remote_pairs:
-            yield local.name
-    else:
-        if prop.secondary is not None:
-            for local, remote in prop.local_remote_pairs:
-                for fk in remote.foreign_keys:
-                    if fk.column.table in prop.parent.tables:
-                        yield local.name
-
-
-def remote_column_names(prop):
-    if not hasattr(prop, 'secondary'):
-        yield '__tablename__'
-        yield 'id'
-    elif prop.secondary is None:
-        for _, remote in prop.local_remote_pairs:
-            yield remote.name
-    else:
-        for _, remote in prop.local_remote_pairs:
-            for fk in remote.foreign_keys:
-                if fk.column.table in prop.parent.tables:
-                    yield remote.name
-
-
 def quote(mixed, ident):
     """
     Conditionally quote an identifier.
@@ -468,10 +456,13 @@ def quote(mixed, ident):
         # 'some_other_identifier'
 
 
-    :param mixed: SQLAlchemy Session / Connection / Engine object.
+    :param mixed: SQLAlchemy Session / Connection / Engine / Dialect object.
     :param ident: identifier to conditionally quote
     """
-    dialect = get_bind(mixed).dialect
+    if isinstance(mixed, Dialect):
+        dialect = mixed
+    else:
+        dialect = get_bind(mixed).dialect
     return dialect.preparer(dialect).quote(ident)
 
 
@@ -531,28 +522,34 @@ def get_query_entities(query):
 
     :param query: SQLAlchemy Query object
     """
+    exprs = [
+        d['expr']
+        if is_labeled_query(d['expr']) or isinstance(d['expr'], sa.Column)
+        else d['entity']
+        for d in query.column_descriptions
+    ]
     return [
-        get_query_entity(entity) for entity in
-        chain(query._entities, query._join_entities)
+        get_query_entity(expr) for expr in exprs
+    ] + [
+        get_query_entity(entity) for entity in query._join_entities
     ]
 
 
-def get_query_entity(mixed):
-    if hasattr(mixed, 'expr'):
-        expr = mixed.expr
-    else:
-        expr = mixed
+def is_labeled_query(expr):
+    return (
+        isinstance(expr, sa.sql.elements.Label) and
+        isinstance(
+            list(expr.base_columns)[0],
+            (sa.sql.selectable.Select, sa.sql.selectable.ScalarSelect)
+        )
+    )
+
+
+def get_query_entity(expr):
     if isinstance(expr, sa.orm.attributes.InstrumentedAttribute):
         return expr.parent.class_
     elif isinstance(expr, sa.Column):
         return expr.table
-    elif isinstance(expr, sa.sql.expression.Label):
-        if mixed.entity_zero:
-            return mixed.entity_zero
-        else:
-            return expr
-    elif isinstance(expr, sa.orm.Mapper):
-        return expr.class_
     elif isinstance(expr, AliasedInsp):
         return expr.entity
     return expr
@@ -621,7 +618,7 @@ def get_descriptor(entity, attr):
                 # Handle synonyms, relationship properties and hybrid
                 # properties
                 try:
-                    return getattr(entity, attr)
+                    return getattr(mapper.class_, attr)
                 except AttributeError:
                     pass
 

@@ -1,42 +1,15 @@
-from sqlalchemy import types
 import six
+from sqlalchemy import types
+
+from sqlalchemy_utils.primitives import Country
+
 from .scalar_coercible import ScalarCoercible
-from sqlalchemy_utils import i18n
-
-
-class Country(object):
-    def __init__(self, code_or_country):
-        if isinstance(code_or_country, Country):
-            self.code = code_or_country.code
-        else:
-            self.code = code_or_country
-
-    @property
-    def name(self):
-        return i18n.get_locale().territories[self.code]
-
-    def __eq__(self, other):
-        if isinstance(other, Country):
-            return self.code == other.code
-        elif isinstance(other, six.string_types):
-            return self.code == other
-        else:
-            return NotImplemented
-
-    def __ne__(self, other):
-        return not (self == other)
-
-    def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, self.code)
-
-    def __unicode__(self):
-        return self.name
 
 
 class CountryType(types.TypeDecorator, ScalarCoercible):
     """
-    Changes Country objects to a string representation on the way in and
-    changes them back to Country objects on the way out.
+    Changes :class:`.Country` objects to a string representation on the way in
+    and changes them back to :class:`.Country objects on the way out.
 
     In order to use CountryType you need to install Babel_ first.
 

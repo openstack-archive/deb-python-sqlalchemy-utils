@@ -1,16 +1,18 @@
 from decimal import Decimal
 
-
-from pytest import mark
 import sqlalchemy as sa
+from pytest import mark
+
+from sqlalchemy_utils import NumericRangeType
+from tests import TestCase
+
 intervals = None
+inf = 0
 try:
     import intervals
     from infinity import inf
 except ImportError:
     pass
-from tests import TestCase
-from sqlalchemy_utils import NumericRangeType
 
 
 @mark.skipif('intervals is None')
@@ -60,7 +62,7 @@ class NumericRangeTestCase(TestCase):
 
     def test_nullify_number_range(self):
         car = self.Car(
-            price_range=intervals.IntInterval([1, 3])
+            price_range=intervals.DecimalInterval([1, 3])
         )
 
         self.session.add(car)
@@ -85,6 +87,25 @@ class NumericRangeTestCase(TestCase):
 
 class TestNumericRangeOnPostgres(NumericRangeTestCase):
     dns = 'postgres://postgres@localhost/sqlalchemy_utils_test'
+
+    @mark.parametrize(
+        ('number_range', 'length'),
+        (
+            ([1, 3], 2),
+            ([1, 1], 0),
+            ([-1, 1], 2),
+            ([-inf, 1], None),
+            ([0, inf], None),
+            ([0, 0], 0),
+            ([-3, -1], 2)
+        )
+    )
+    def test_length(self, number_range, length):
+        self.create_car(number_range)
+        query = (
+            self.session.query(self.Car.price_range.length)
+        )
+        assert query.scalar() == length
 
 
 @mark.skipif('intervals is None')

@@ -3,19 +3,15 @@ import os
 import sqlalchemy as sa
 from flexmock import flexmock
 from pytest import mark
-pymysql = None
-try:
-    import pymysql
-except ImportError:
-    pass
 
+from sqlalchemy_utils import create_database, database_exists, drop_database
 from tests import TestCase
 
-from sqlalchemy_utils import (
-    create_database,
-    drop_database,
-    database_exists,
-)
+pymysql = None
+try:
+    import pymysql  # noqa
+except ImportError:
+    pass
 
 
 class DatabaseTest(TestCase):

@@ -5,6 +5,7 @@ except ImportError:
     pass
 import six
 from sqlalchemy import types
+
 from .scalar_coercible import ScalarCoercible
 
 
@@ -29,8 +30,8 @@ class URLType(types.TypeDecorator, ScalarCoercible):
 
         user = User(website=u'www.example.com')
 
-        # website is coerced to furl object, hence all nice furl operations come
-        # available
+        # website is coerced to furl object, hence all nice furl operations
+        # come available
         user.website.args['some_argument'] = '12'
 
         print user.website
@@ -60,3 +61,7 @@ class URLType(types.TypeDecorator, ScalarCoercible):
         if value is not None and not isinstance(value, furl):
             return furl(value)
         return value
+
+    @property
+    def python_type(self):
+        return self.impl.type.python_type

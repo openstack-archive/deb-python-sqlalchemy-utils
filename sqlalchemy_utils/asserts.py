@@ -33,20 +33,10 @@ We can easily test the constraints by assert_* functions::
     assert_max_length(user, 'email', 300)
 """
 from decimal import Decimal
+
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.exc import DataError, IntegrityError
-
-
-class raises(object):
-    def __init__(self, expected_exc):
-        self.expected_exc = expected_exc
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        return exc_type == self.expected_exc
 
 
 def _update_field(obj, field, value):
@@ -67,10 +57,15 @@ def _expect_successful_update(obj, field, value, reraise_exc):
 
 
 def _expect_failing_update(obj, field, value, expected_exc):
-    with raises(expected_exc):
+    try:
         _update_field(obj, field, value)
-    session = sa.orm.object_session(obj)
-    session.rollback()
+    except expected_exc:
+        pass
+    else:
+        raise AssertionError('Expected update to raise %s' % expected_exc)
+    finally:
+        session = sa.orm.object_session(obj)
+        session.rollback()
 
 
 def _repeated_value(type_):

@@ -1,14 +1,13 @@
-import six
 from sqlalchemy import types
+
 from sqlalchemy_utils.exceptions import ImproperlyConfigured
 from sqlalchemy_utils.utils import str_coercible
-from .scalar_coercible import ScalarCoercible
 
+from .scalar_coercible import ScalarCoercible
 
 try:
     import phonenumbers
     from phonenumbers.phonenumber import PhoneNumber as BasePhoneNumber
-
 except ImportError:
     phonenumbers = None
     BasePhoneNumber = object
@@ -46,8 +45,9 @@ class PhoneNumber(BasePhoneNumber):
             italian_leading_zero=self._phone_number.italian_leading_zero,
             raw_input=self._phone_number.raw_input,
             country_code_source=self._phone_number.country_code_source,
-            preferred_domestic_carrier_code=
-            self._phone_number.preferred_domestic_carrier_code
+            preferred_domestic_carrier_code=(
+                self._phone_number.preferred_domestic_carrier_code
+            )
         )
         self.national = phonenumbers.format_number(
             self._phone_number,
@@ -109,10 +109,14 @@ class PhoneNumberType(types.TypeDecorator, ScalarCoercible):
 
     def process_bind_param(self, value, dialect):
         if value:
-            if isinstance(value, PhoneNumber):
-                return getattr(value, self.STORE_FORMAT)
-            else:
-                return getattr(PhoneNumber(value), self.STORE_FORMAT)
+            if not isinstance(value, PhoneNumber):
+                value = PhoneNumber(value, country_code=self.country_code)
+
+            if self.STORE_FORMAT == 'e164' and value.extension:
+                return '%s;ext=%s' % (value.e164, value.extension)
+
+            return getattr(value, self.STORE_FORMAT)
+
         return value
 
     def process_result_value(self, value, dialect):
@@ -121,6 +125,7 @@ class PhoneNumberType(types.TypeDecorator, ScalarCoercible):
         return value
 
     def _coerce(self, value):
-        if value is not None and not isinstance(value, PhoneNumber):
+        if value and not isinstance(value, PhoneNumber):
             value = PhoneNumber(value, country_code=self.country_code)
-        return value
+
+        return value or None

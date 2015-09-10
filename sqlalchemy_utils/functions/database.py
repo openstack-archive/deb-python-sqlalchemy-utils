@@ -5,7 +5,8 @@ from copy import copy
 
 import sqlalchemy as sa
 from sqlalchemy.engine.url import make_url
-from sqlalchemy.exc import ProgrammingError, OperationalError
+from sqlalchemy.exc import OperationalError, ProgrammingError
+
 from sqlalchemy_utils.expressions import explain_analyze
 
 from .orm import quote
@@ -246,8 +247,9 @@ def has_index(column):
             'Only columns belonging to Table objects are supported. Given '
             'column belongs to %r.' % table
         )
+    primary_keys = table.primary_key.columns.values()
     return (
-        column is table.primary_key.columns.values()[0]
+        (primary_keys and column is primary_keys[0])
         or
         any(
             index.columns.values()[0] is column

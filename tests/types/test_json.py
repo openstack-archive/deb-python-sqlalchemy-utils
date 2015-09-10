@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from pytest import mark
 import sqlalchemy as sa
+from pytest import mark
+
 from sqlalchemy_utils.types import json
 from tests import TestCase
 
@@ -51,6 +52,7 @@ class JSONTestCase(TestCase):
 @mark.skipif('json.json is None')
 class TestSqliteJSONType(JSONTestCase):
     pass
+
 
 @mark.skipif('json.json is None')
 class TestPostgresJSONType(JSONTestCase):

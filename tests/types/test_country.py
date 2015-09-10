@@ -1,22 +1,11 @@
 import sqlalchemy as sa
-from sqlalchemy_utils import CountryType, Country
+from pytest import mark
+
+from sqlalchemy_utils import Country, CountryType, i18n  # noqa
 from tests import TestCase
 
 
-class TestCountry(object):
-    def test_init(self):
-        assert Country(u'fi') == Country(Country(u'fi'))
-
-    def test_equality_operator(self):
-        assert Country(u'fi') == u'fi'
-        assert u'fi' == Country(u'fi')
-        assert Country(u'fi') == Country(u'fi')
-
-    def test_non_equality_operator(self):
-        assert Country(u'fi') != u'sv'
-        assert not (Country(u'fi') != u'fi')
-
-
+@mark.skipif('i18n.babel is None')
 class TestCountryType(TestCase):
     def create_models(self):
         class User(self.Base):
@@ -31,7 +20,7 @@ class TestCountryType(TestCase):
 
     def test_parameter_processing(self):
         user = self.User(
-            country=Country(u'fi')
+            country=Country(u'FI')
         )
 
         self.session.add(user)
@@ -41,6 +30,5 @@ class TestCountryType(TestCase):
         assert user.country.name == u'Finland'
 
     def test_scalar_attributes_get_coerced_to_objects(self):
-        user = self.User(country='fi')
-
+        user = self.User(country='FI')
         assert isinstance(user.country, Country)

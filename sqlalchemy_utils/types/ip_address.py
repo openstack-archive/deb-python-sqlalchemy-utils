@@ -1,4 +1,9 @@
 import six
+from sqlalchemy import types
+
+from sqlalchemy_utils.exceptions import ImproperlyConfigured
+
+from .scalar_coercible import ScalarCoercible
 
 ip_address = None
 try:
@@ -8,11 +13,6 @@ except ImportError:
         from ipaddr import IPAddress as ip_address
     except ImportError:
         pass
-
-
-from sqlalchemy import types
-from sqlalchemy_utils.exceptions import ImproperlyConfigured
-from .scalar_coercible import ScalarCoercible
 
 
 class IPAddressType(types.TypeDecorator, ScalarCoercible):
@@ -67,3 +67,7 @@ class IPAddressType(types.TypeDecorator, ScalarCoercible):
 
     def _coerce(self, value):
         return ip_address(value) if value else None
+
+    @property
+    def python_type(self):
+        return self.impl.type.python_type

@@ -1,4 +1,5 @@
 import sqlalchemy as sa
+
 from sqlalchemy_utils.aggregates import aggregated
 from tests import TestCase
 
@@ -7,7 +8,9 @@ class TestAggregatesWithManyToManyRelationships(TestCase):
     dns = 'postgres://postgres@localhost/sqlalchemy_utils_test'
 
     def create_models(self):
-        user_group = sa.Table('user_group', self.Base.metadata,
+        user_group = sa.Table(
+            'user_group',
+            self.Base.metadata,
             sa.Column('user_id', sa.Integer, sa.ForeignKey('user.id')),
             sa.Column('group_id', sa.Integer, sa.ForeignKey('group.id'))
         )

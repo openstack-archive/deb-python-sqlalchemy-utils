@@ -1,10 +1,11 @@
 import sqlalchemy as sa
-from tests import TestCase
+
 from sqlalchemy_utils.functions import (
-    render_statement,
+    mock_engine,
     render_expression,
-    mock_engine
+    render_statement
 )
+from tests import TestCase
 
 
 class TestRender(TestCase):
@@ -16,7 +17,7 @@ class TestRender(TestCase):
 
         self.User = User
 
-    def test_render_statement_query(self):
+    def test_render_orm_query(self):
         query = self.session.query(self.User).filter_by(id=3)
         text = render_statement(query)
 
@@ -31,6 +32,12 @@ class TestRender(TestCase):
         assert 'SELECT user.id, user.name' in text
         assert 'FROM user' in text
         assert 'WHERE user.id = 3' in text
+
+    def test_render_statement_without_mapper(self):
+        statement = sa.select([sa.text('1')])
+        text = render_statement(statement, bind=self.session.bind)
+
+        assert 'SELECT 1' in text
 
     def test_render_ddl(self):
         expression = 'self.User.__table__.create(engine)'

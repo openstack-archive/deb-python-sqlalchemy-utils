@@ -2,12 +2,11 @@ import six
 import sqlalchemy as sa
 from pytest import mark
 
+from sqlalchemy_utils import PhoneNumber, PhoneNumberType, types  # noqa
 from tests import TestCase
-from sqlalchemy_utils import PhoneNumberType, PhoneNumber
-from sqlalchemy_utils.types import phone_number
 
 
-@mark.skipif('phone_number.phonenumbers is None')
+@mark.skipif('types.phone_number.phonenumbers is None')
 class TestPhoneNumber(object):
     def setup_method(self, method):
         self.valid_phone_numbers = [
@@ -48,13 +47,13 @@ class TestPhoneNumber(object):
     def test_phone_number_str_repr(self):
         number = PhoneNumber('+358401234567')
         if six.PY2:
-            assert unicode(number) == number.national
+            assert unicode(number) == number.national  # noqa
             assert str(number) == number.national.encode('utf-8')
         else:
             assert str(number) == number.national
 
 
-@mark.skipif('phone_number.phonenumbers is None')
+@mark.skipif('types.phone_number.phonenumbers is None')
 class TestPhoneNumberType(TestCase):
 
     def create_models(self):
@@ -88,6 +87,22 @@ class TestPhoneNumberType(TestCase):
             {'param': self.user.id}
         )
         assert result.first()[0] == u'+358401234567'
+
+    def test_phone_number_with_extension(self):
+        user = self.User(phone_number='555-555-5555 Ext. 555')
+
+        self.session.add(user)
+        self.session.commit()
+        self.session.refresh(user)
+        assert user.phone_number.extension == '555'
+
+    def test_empty_phone_number_is_equiv_to_none(self):
+        user = self.User(phone_number='')
+
+        self.session.add(user)
+        self.session.commit()
+        self.session.refresh(user)
+        assert user.phone_number is None
 
     def test_phone_number_is_none(self):
         phone_number = None

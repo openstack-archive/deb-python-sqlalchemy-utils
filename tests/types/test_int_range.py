@@ -1,5 +1,9 @@
-from pytest import mark
 import sqlalchemy as sa
+from pytest import mark
+
+from sqlalchemy_utils import IntRangeType
+from tests import TestCase
+
 intervals = None
 inf = -1
 try:
@@ -7,8 +11,6 @@ try:
     from infinity import inf
 except ImportError:
     pass
-from tests import TestCase
-from sqlalchemy_utils import IntRangeType
 
 
 @mark.skipif('intervals is None')
@@ -35,7 +37,7 @@ class NumberRangeTestCase(TestCase):
 
     def test_nullify_range(self):
         building = self.create_building(None)
-        assert building.persons_at_night == None
+        assert building.persons_at_night is None
 
     def test_update_with_none(self):
         interval = intervals.IntInterval('(,)')
@@ -110,6 +112,25 @@ class TestIntRangeTypeOnPostgres(NumberRangeTestCase):
             .filter(self.Building.persons_at_night == number_range)
         )
         assert query.count()
+
+    @mark.parametrize(
+        ('number_range', 'length'),
+        (
+            ([1, 3], 2),
+            ([1, 1], 0),
+            ([-1, 1], 2),
+            ([-inf, 1], None),
+            ([0, inf], None),
+            ([0, 0], 0),
+            ([-3, -1], 2)
+        )
+    )
+    def test_length(self, number_range, length):
+        self.create_building(number_range)
+        query = (
+            self.session.query(self.Building.persons_at_night.length)
+        )
+        assert query.scalar() == length
 
     @mark.parametrize(
         'number_range',
