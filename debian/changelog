@@ -1,3 +1,9 @@
+python-sqlalchemy-utils (0.30.12-2) unstable; urgency=medium
+
+  * Added reproducibility patch from Chris Lamb (Closes: #799206).
+
+ -- Thomas Goirand <zigo@debian.org>  Fri, 13 Nov 2015 09:54:23 +0000
+
 python-sqlalchemy-utils (0.30.12-1) unstable; urgency=medium
 
   * Initial release. (Closes: #798561)
