@@ -1,3 +1,9 @@
+python-sqlalchemy-utils (0.30.12-3) UNRELEASED; urgency=medium
+
+  * Fixed VCS URLs (https).
+
+ -- Ondřej Nový <novy@ondrej.org>  Sun, 28 Feb 2016 15:50:49 +0100
+
 python-sqlalchemy-utils (0.30.12-2) unstable; urgency=medium
 
   * Added reproducibility patch from Chris Lamb (Closes: #799206).
