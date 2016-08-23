@@ -1,0 +1,8 @@
+Code-Review+2: Thomas Goirand <thomas@goirand.fr>
+Workflow+1: Thomas Goirand <thomas@goirand.fr>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 23 Aug 2016 15:34:15 +0000
+Reviewed-on: https://review.openstack.org/359263
+Project: openstack/deb-python-sqlalchemy-utils
+Branch: refs/heads/debian/newton
