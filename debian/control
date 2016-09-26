@@ -15,8 +15,8 @@ Build-Depends-Indep: python-six,
                      python3-six,
                      python3-sqlalchemy,
 Standards-Version: 3.9.6
-Vcs-Browser: https://anonscm.debian.org/cgit/openstack/python-sqlalchemy-utils.git/
-Vcs-Git: https://anonscm.debian.org/git/openstack/python-sqlalchemy-utils.git
+Vcs-Browser: https://git.openstack.org/cgit/openstack/deb-python-sqlalchemy-utils?h=debian%2Fnewton
+Vcs-Git: https://git.openstack.org/openstack/deb-python-sqlalchemy-utils -b debian/newton
 Homepage: https://github.com/kvesteri/sqlalchemy-utils
 
 Package: python-sqlalchemy-utils
