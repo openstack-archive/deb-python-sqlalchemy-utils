@@ -1,4 +1,4 @@
-python-sqlalchemy-utils (0.30.12-3) UNRELEASED; urgency=medium
+python-sqlalchemy-utils (0.30.12-3) unstable; urgency=medium
 
   * Fixed VCS URLs (https).
   * d/rules: Changed UPSTREAM_GIT protocol to https
