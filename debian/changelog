@@ -1,3 +1,9 @@
+python-sqlalchemy-utils (0.30.12-4) UNRELEASED; urgency=medium
+
+  * Bumped debhelper compat version to 10
+
+ -- Ondřej Nový <onovy@debian.org>  Thu, 24 Nov 2016 00:11:45 +0100
+
 python-sqlalchemy-utils (0.30.12-3) unstable; urgency=medium
 
   * Fixed VCS URLs (https).
