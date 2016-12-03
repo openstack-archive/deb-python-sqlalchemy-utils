@@ -1,8 +1,12 @@
-python-sqlalchemy-utils (0.30.12-4) UNRELEASED; urgency=medium
+python-sqlalchemy-utils (0.30.12-4) unstable; urgency=medium
 
+  [ Ondřej Nový ]
   * Bumped debhelper compat version to 10
 
- -- Ondřej Nový <onovy@debian.org>  Thu, 24 Nov 2016 00:11:45 +0100
+  [ Thomas Goirand ]
+  * Rebuild with SQLA 1.1.x.
+
+ -- Thomas Goirand <zigo@debian.org>  Sat, 03 Dec 2016 12:45:36 +0100
 
 python-sqlalchemy-utils (0.30.12-3) unstable; urgency=medium
 
